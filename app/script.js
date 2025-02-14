@@ -273,6 +273,13 @@ let main = {
             });
           }
 
+          if (main.methods.isCastlingPossible('w_king', 'w_rook1', ['2_1', '3_1', '4_1'], ['1_1'])) {
+            coordinates.push('3_1');
+          }
+          if (main.methods.isCastlingPossible('w_king', 'w_rook2', ['6_1', '7_1'], ['8_1'])) {
+            coordinates.push('7_1');
+          }
+
           options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
           main.variables.highlighted = options.slice(0);
           main.methods.togglehighlight(options);
@@ -289,11 +296,14 @@ let main = {
             return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
           });
         }
-        /*
-          coordinates = [{ x: 1, y: 1 },{ x: 1, y: 0 },{ x: 1, y: -1 },{ x: 0, y: -1 },{ x: -1, y: -1 },{ x: -1, y: 0 },{ x: -1, y: 1 },{ x: 0, y: 1 }].map(function(val){
-            return (parseInt(position.x) + parseInt(val.x)) + '_' + (parseInt(position.y) + parseInt(val.y));
-          });
-        */
+
+        if (main.methods.isCastlingPossible('b_king', 'b_rook1', ['2_8', '3_8', '4_8'], ['1_8'])) {
+          coordinates.push('3_8');
+        }
+        if (main.methods.isCastlingPossible('b_king', 'b_rook2', ['6_8', '7_8'], ['8_8'])) {
+          coordinates.push('7_8');
+        }
+
           options = (main.methods.options(startpoint, coordinates, main.variables.pieces[selectedpiece].type)).slice(0);
           main.variables.highlighted = options.slice(0);
           main.methods.togglehighlight(options);
@@ -654,14 +664,24 @@ let main = {
 
       let selectedpiece = $('#' + main.variables.selectedpiece).attr('chess');
 
-      // new cell
-      $('#' + target.id).html(main.variables.pieces[selectedpiece].img);
-      $('#' + target.id).attr('chess',selectedpiece);
-      // old cell
-      $('#' + main.variables.selectedpiece).html('');
-      $('#' + main.variables.selectedpiece).attr('chess','null');
-      main.variables.pieces[selectedpiece].position = target.id;
-      main.variables.pieces[selectedpiece].moved = true;
+      if (selectedpiece == 'w_king' && target.id == '3_1') {
+        main.methods.castle('w_king', 'w_rook1', '3_1', '4_1');
+      } else if (selectedpiece == 'w_king' && target.id == '7_1') {
+        main.methods.castle('w_king', 'w_rook2', '7_1', '6_1');
+      } else if (selectedpiece == 'b_king' && target.id == '3_8') {
+        main.methods.castle('b_king', 'b_rook1', '3_8', '4_8');
+      } else if (selectedpiece == 'b_king' && target.id == '7_8') {
+        main.methods.castle('b_king', 'b_rook2', '7_8', '6_8');
+      } else {
+        // new cell
+        $('#' + target.id).html(main.variables.pieces[selectedpiece].img);
+        $('#' + target.id).attr('chess',selectedpiece);
+        // old cell
+        $('#' + main.variables.selectedpiece).html('');
+        $('#' + main.variables.selectedpiece).attr('chess','null');
+        main.variables.pieces[selectedpiece].position = target.id;
+        main.variables.pieces[selectedpiece].moved = true;
+      }
 
       /*
       // toggle highlighted coordinates
@@ -715,6 +735,51 @@ let main = {
         $('#' + element).toggleClass("green shake-little neongreen_txt");
       });
     },
+
+    isCastlingPossible: function(king, rook, kingPath, rookPath) {
+      if (main.variables.pieces[king].moved || main.variables.pieces[rook].moved) {
+        return false;
+      }
+    
+      for (let i = 0; i < kingPath.length; i++) {
+        if ($('#' + kingPath[i]).attr('chess') != 'null') {
+          return false;
+        }
+      }
+    
+      for (let i = 0; i < rookPath.length; i++) {
+        if ($('#' + rookPath[i]).attr('chess') != 'null') {
+          return false;
+        }
+      }
+    
+      // Add additional checks for check conditions if necessary
+    
+      return true;
+    },
+
+    castle: function(king, rook, kingTarget, rookTarget) {
+      let kingPosition = main.variables.pieces[king].position;
+      let rookPosition = main.variables.pieces[rook].position;
+    
+      // Move king
+      $('#' + kingPosition).html('');
+      $('#' + kingPosition).attr('chess', 'null');
+      $('#' + kingTarget).html(main.variables.pieces[king].img);
+      $('#' + kingTarget).attr('chess', king);
+      main.variables.pieces[king].position = kingTarget;
+      main.variables.pieces[king].moved = true;
+    
+      // Move rook
+      $('#' + rookPosition).html('');
+      $('#' + rookPosition).attr('chess', 'null');
+      $('#' + rookTarget).html(main.variables.pieces[rook].img);
+      $('#' + rookTarget).attr('chess', rook);
+      main.variables.pieces[rook].position = rookTarget;
+      main.variables.pieces[rook].moved = true;
+    
+      main.methods.endturn();
+    }
 
   }
 };
